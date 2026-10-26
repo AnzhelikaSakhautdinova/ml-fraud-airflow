@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-26",
+  "scope": "HW3 high-grade requirements",
+  "unit_tests": {
+    "passed": 6,
+    "failed": 0
+  },
+  "compose_build": "passed",
+  "dag_imports": "no import errors",
+  "python_dependencies": "pip check passed",
+  "manual_dags": {
+    "supply_labeled_month": "verify_93b2be6b78c1485db626f7062dc3a9a2",
+    "retrain_fraud_model": "verify_57896f3d70ba40628ae20291d670d2fb",
+    "data_quality_report": "verify_b06922951d334343a0a4515dce7895db"
+  },
+  "kafka_scoring": "passed before and after retraining",
+  "hot_reload": {
+    "container_id_unchanged": true,
+    "before_version": "2020-04-b8ae58804fd9",
+    "after_version": "2020-05-04a03c8e1c55",
+    "restart_count": 0
+  },
+  "quality_gate": {
+    "candidate_ap": 0.8498050839769107,
+    "incumbent_ap": 0.5048728100668138,
+    "candidate_roc_auc": 0.9983829938277691,
+    "accepted": true,
+    "test_month": "2020-05",
+    "test_rows": 3000,
+    "threshold": 0.5
+  },
+  "data_quality": {
+    "rules": 10,
+    "passed": true,
+    "html": "dq.html"
+  },
+  "seed_rows": 9000,
+  "seed_sha256": "8c3008e561deafe3e7ae2f31f38e3767cba18213fbbfd8b5e2a9f836bb8e1f3f",
+  "limitations": [
+    "Synthetic future months are not independent real-world validation",
+    "Training uses 9000-row fixture, not all 786431 source rows",
+    "GitHub publication and hosted CI not performed"
+  ],
+  "web_ui_check": {
+    "date": "2026-10-26",
+    "worker": "gthread",
+    "threads": 4,
+    "http_status": 200,
+    "response_seconds": 0.088
+  }
+}

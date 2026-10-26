@@ -1,0 +1,17 @@
+name: HW3 Airflow
+on: [push, pull_request]
+jobs:
+  airflow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose config -q
+      - run: docker compose up -d --build --wait --wait-timeout 240
+      - run: docker compose exec -T airflow python -m pip check
+      - run: docker compose exec -T airflow python -m unittest discover -s tests -v
+      - run: docker compose exec -T airflow python -m scripts.check_system
+      - if: always()
+        run: docker compose logs --tail=150
+      - if: always()
+        run: docker compose down -v

@@ -1,0 +1,103 @@
+name: fraud-hw3
+services:
+  kafka:
+    image: confluentinc/cp-kafka:7.8.0
+    hostname: kafka
+    restart: unless-stopped
+    networks: [pipeline]
+    environment:
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:9095,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9095
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_HEAP_OPTS: -Xms256m -Xmx512m
+    volumes: ['kafka-data:/var/lib/kafka/data']
+    healthcheck:
+      test: ['CMD', 'kafka-topics', '--bootstrap-server', 'localhost:9092', '--list']
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
+  kafka-init:
+    image: confluentinc/cp-kafka:7.8.0
+    networks: [pipeline]
+    depends_on:
+      kafka: {condition: service_healthy}
+    entrypoint: ['/bin/bash', '-ec']
+    command:
+      - |
+        for topic in transactions scores transactions_dlq; do
+          kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic "$$topic" --partitions 3 --replication-factor 1
+        done
+  init:
+    build: .
+    image: fraud-hw3-app
+    networks: [pipeline]
+    environment: &env
+      RUNTIME_DIR: /opt/project/runtime
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/state/airflow.db
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+      AIRFLOW__CORE__PARALLELISM: '1'
+      AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth
+      AIRFLOW__WEBSERVER__SECRET_KEY: homework-local-secret-key
+    volumes: &volumes
+      - runtime:/opt/project/runtime
+      - airflow-state:/opt/airflow/state
+      - airflow-logs:/opt/airflow/logs
+    entrypoint: ['/bin/bash', '-ec']
+    command:
+      - |
+        python -m pipeline.tasks
+        airflow db migrate
+        airflow users create --username admin --password admin --firstname Homework --lastname Student --role Admin --email admin@example.local || airflow users reset-password --username admin --password admin
+  airflow:
+    image: fraud-hw3-app
+    restart: unless-stopped
+    networks: [pipeline]
+    environment:
+      <<: *env
+      GUNICORN_CMD_ARGS: --threads 4
+    volumes: *volumes
+    ports: ['127.0.0.1:8083:8080']
+    depends_on:
+      init: {condition: service_completed_successfully}
+    entrypoint: ['/bin/bash', '-ec']
+    command: ['airflow scheduler & exec airflow webserver --workers 1']
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+  scorer:
+    image: fraud-hw3-app
+    restart: unless-stopped
+    networks: [pipeline]
+    environment: *env
+    volumes:
+      - runtime:/opt/project/runtime:ro
+    depends_on:
+      init: {condition: service_completed_successfully}
+      kafka-init: {condition: service_completed_successfully}
+    entrypoint: ['python', '-m', 'app.worker']
+networks:
+  pipeline:
+volumes:
+  kafka-data:
+  runtime:
+  airflow-state:
+  airflow-logs:

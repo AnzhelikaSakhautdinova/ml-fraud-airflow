@@ -1,0 +1,51 @@
+{
+  "passed": true,
+  "runs": {
+    "supply_labeled_month": "verify_93b2be6b78c1485db626f7062dc3a9a2",
+    "retrain_fraud_model": "verify_57896f3d70ba40628ae20291d670d2fb",
+    "data_quality_report": "verify_b06922951d334343a0a4515dce7895db"
+  },
+  "before": {
+    "transaction_id": "verify-5408a4f18b0740a6b086b4948f7705a7",
+    "score": 0.10732388785355769,
+    "fraud_flag": 0,
+    "model_version": "2020-04-b8ae58804fd9"
+  },
+  "after": {
+    "transaction_id": "verify-a3bc97d7f1d947b1badeab024430ee23",
+    "score": 0.09884396504161166,
+    "fraud_flag": 0,
+    "model_version": "2020-05-04a03c8e1c55"
+  },
+  "active": {
+    "version": "2020-05-04a03c8e1c55",
+    "processed_month": "2020-05",
+    "accepted": true,
+    "evaluation": {
+      "candidate_ap": 0.8498050839769107,
+      "incumbent_ap": 0.5048728100668138,
+      "candidate_roc_auc": 0.9983829938277691,
+      "accepted": true,
+      "test_month": "2020-05",
+      "test_rows": 3000,
+      "threshold": 0.5
+    }
+  },
+  "dq": {
+    "created_at": "2026-10-26T10:43:07.526077+00:00",
+    "rows": 15000,
+    "passed": true,
+    "rules": {
+      "dataset_not_empty": true,
+      "unique_ids": true,
+      "valid_transaction_time": true,
+      "month_matches_transaction_time": true,
+      "binary_target": true,
+      "finite_numeric_values": true,
+      "nonnegative_amount_population": true,
+      "valid_coordinates": true,
+      "nonempty_categories": true,
+      "both_classes_per_month": true
+    }
+  }
+}

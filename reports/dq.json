@@ -1,0 +1,17 @@
+{
+  "created_at": "2026-10-26T10:43:07.526077+00:00",
+  "rows": 15000,
+  "passed": true,
+  "rules": {
+    "dataset_not_empty": true,
+    "unique_ids": true,
+    "valid_transaction_time": true,
+    "month_matches_transaction_time": true,
+    "binary_target": true,
+    "finite_numeric_values": true,
+    "nonnegative_amount_population": true,
+    "valid_coordinates": true,
+    "nonempty_categories": true,
+    "both_classes_per_month": true
+  }
+}
