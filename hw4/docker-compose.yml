@@ -1,0 +1,51 @@
+name: fraud-hw4
+x-tools: &tools
+  image: fraud-hw4-dbt
+  build: .
+  environment:
+    CLICKHOUSE_HOST: clickhouse
+    CLICKHOUSE_PORT: '8123'
+    CLICKHOUSE_USER: homework
+    CLICKHOUSE_PASSWORD: homework_local
+  volumes:
+    - ./data:/data:ro
+    - ./reports:/workspace/reports
+    - ./dbt:/workspace/dbt
+    - ./scripts:/workspace/scripts:ro
+    - ./.sqlfluff:/workspace/.sqlfluff:ro
+  depends_on:
+    clickhouse: {condition: service_healthy}
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.3
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_USER: homework
+      CLICKHOUSE_PASSWORD: homework_local
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1'
+    ports: ['127.0.0.1:8125:8123']
+    volumes: ['clickhouse-data:/var/lib/clickhouse']
+    healthcheck:
+      test: ['CMD', 'clickhouse-client', '--user', 'homework', '--password', 'homework_local', '--query', 'SELECT 1']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+  loader:
+    <<: *tools
+    command: ['python', 'scripts/load_data.py', '/data/transactions.csv']
+  dbt:
+    <<: *tools
+    working_dir: /workspace/dbt
+    command: ['dbt', 'build']
+    depends_on:
+      loader: {condition: service_completed_successfully}
+    profiles: [tools]
+  docs:
+    <<: *tools
+    working_dir: /workspace/dbt
+    command: ['dbt', 'docs', 'serve', '--host', '0.0.0.0', '--port', '8080', '--no-browser']
+    ports: ['127.0.0.1:8084:8080']
+    profiles: [docs]
+volumes:
+  clickhouse-data:

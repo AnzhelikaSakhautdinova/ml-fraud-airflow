@@ -1,0 +1,10 @@
+[sqlfluff]
+dialect = clickhouse
+templater = dbt
+max_line_length = 120
+exclude_rules = AL03,ST06,RF04,CP03
+# ClickHouse function names are case-sensitive; preserve toUInt8/sumIf etc.
+
+[sqlfluff:templater:dbt]
+project_dir = dbt
+profiles_dir = dbt

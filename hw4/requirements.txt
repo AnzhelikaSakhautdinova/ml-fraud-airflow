@@ -1,0 +1,5 @@
+dbt-core==1.10.13
+dbt-clickhouse==1.10.3
+sqlfluff==3.4.2
+sqlfluff-templater-dbt==3.4.2
+pre-commit==4.3.0

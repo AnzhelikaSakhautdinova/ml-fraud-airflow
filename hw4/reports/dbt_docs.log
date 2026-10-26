@@ -1,0 +1,8 @@
+11:22:37  Running with dbt=1.10.13
+11:22:37  Registered adapter: clickhouse=1.10.3
+11:22:37  Found 7 models, 96 data tests, 1 seed, 1 source, 941 macros, 3 unit tests
+11:22:37  
+11:22:37  Concurrency: 2 threads (target='dev')
+11:22:37  
+11:22:38  Building catalog
+11:22:38  Catalog written to /workspace/dbt/target/catalog.json

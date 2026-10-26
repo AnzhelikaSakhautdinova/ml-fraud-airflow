@@ -1,0 +1,80 @@
+version: 2
+sources:
+- name: raw
+  schema: transactions_db
+  description: Размеченные транзакции соревнования из набора ДЗ 2.
+  tables:
+  - name: transactions
+    description: Исходные транзакции, загруженные из train.csv.
+    columns:
+    - name: transaction_id
+      data_type: String
+      description: 'Идентификатор строки: хеш файла и номер строки.'
+      data_tests:
+      - not_null
+      - unique
+    - name: transaction_time
+      data_type: DateTime
+      description: Время транзакции в UTC.
+      data_tests:
+      - not_null
+    - name: merch
+      data_type: String
+      description: Название мерчанта.
+      data_tests:
+      - not_null
+    - name: cat_id
+      data_type: String
+      description: Категория покупки.
+      data_tests:
+      - not_null
+    - name: amount
+      data_type: Float64
+      description: Сумма транзакции.
+      data_tests:
+      - not_null
+    - name: name_1
+      data_type: String
+      description: Имя клиента.
+      data_tests:
+      - not_null
+    - name: name_2
+      data_type: String
+      description: Фамилия клиента.
+      data_tests:
+      - not_null
+    - name: gender
+      data_type: String
+      description: 'Пол клиента: M или F.'
+      data_tests:
+      - not_null
+    - name: us_state
+      data_type: String
+      description: Код штата США, включая DC.
+      data_tests:
+      - not_null
+    - name: lat
+      data_type: Float64
+      description: Широта клиента.
+      data_tests:
+      - not_null
+    - name: lon
+      data_type: Float64
+      description: Долгота клиента.
+      data_tests:
+      - not_null
+    - name: merchant_lat
+      data_type: Float64
+      description: Широта мерчанта.
+      data_tests:
+      - not_null
+    - name: merchant_lon
+      data_type: Float64
+      description: Долгота мерчанта.
+      data_tests:
+      - not_null
+    - name: target
+      data_type: UInt8
+      description: 'Настоящая метка фрода: 0 или 1.'
+      data_tests:
+      - not_null
