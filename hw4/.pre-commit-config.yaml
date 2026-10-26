@@ -1,0 +1,9 @@
+repos:
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.4.2
+    hooks:
+      - id: sqlfluff-lint
+        entry: bash -c 'if [ -d hw4/dbt ]; then cd hw4; fi; exec sqlfluff lint dbt/models dbt/tests'
+        pass_filenames: false
+        additional_dependencies: [sqlfluff-templater-dbt==3.4.2, dbt-core==1.10.13, dbt-clickhouse==1.10.3]
+        files: (^|/)dbt/(models|tests)/.*\.sql$

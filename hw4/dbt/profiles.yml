@@ -1,0 +1,12 @@
+fraud_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      host: "{{ env_var('CLICKHOUSE_HOST', 'localhost') }}"
+      port: "{{ env_var('CLICKHOUSE_PORT', '8125') | int }}"
+      user: "{{ env_var('CLICKHOUSE_USER', 'homework') }}"
+      password: "{{ env_var('CLICKHOUSE_PASSWORD', 'homework_local') }}"
+      schema: analytics
+      secure: false
+      threads: 2

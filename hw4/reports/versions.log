@@ -1,0 +1,12 @@
+Core:
+  - installed: 1.10.13
+  - latest:    1.12.6  - Update available!
+
+  Your version of dbt-core is out of date!
+  You can find instructions for upgrading here:
+  https://docs.getdbt.com/docs/installation
+
+Plugins:
+  - clickhouse: 1.10.3 - Up to date!
+
+

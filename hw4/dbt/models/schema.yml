@@ -1,0 +1,334 @@
+version: 2
+models:
+- name: stg_transactions
+  description: Очистка, типизация, признаки времени и сегменты суммы.
+  columns:
+  - name: transaction_id
+    description: 'Идентификатор строки: хеш файла и номер строки.'
+    data_tests:
+    - not_null
+    - unique
+  - name: transaction_time
+    description: Время транзакции в UTC.
+    data_tests:
+    - not_null
+  - name: transaction_date
+    description: Дата транзакции UTC.
+    data_tests:
+    - not_null
+  - name: day_of_week
+    description: 'День недели ISO: понедельник 1, воскресенье 7.'
+    data_tests:
+    - not_null
+  - name: transaction_hour
+    description: 'Час транзакции UTC: 0–23.'
+    data_tests:
+    - not_null
+  - name: us_state
+    description: Код штата США, включая DC.
+    data_tests:
+    - not_null
+    - relationships:
+        arguments:
+          to: ref('states')
+          field: state_code
+  - name: category
+    description: Очищенная категория транзакции.
+    data_tests:
+    - not_null
+  - name: merchant
+    description: Очищенное название мерчанта.
+    data_tests:
+    - not_null
+  - name: gender
+    description: 'Пол клиента: M или F.'
+    data_tests:
+    - not_null
+    - accepted_values:
+        arguments:
+          values:
+          - M
+          - F
+  - name: amount
+    description: Сумма транзакции.
+    data_tests:
+    - not_null
+  - name: fraud_flag
+    description: Настоящая метка target, а не предсказание модели.
+    data_tests:
+    - not_null
+    - accepted_values:
+        arguments:
+          values:
+          - 0
+          - 1
+  - name: amount_segment
+    description: SMALL <100, MEDIUM от 100 до 1000, LARGE от 1000.
+    data_tests:
+    - not_null
+    - accepted_values:
+        arguments:
+          values:
+          - SMALL
+          - MEDIUM
+          - LARGE
+  - name: customer_id
+    description: Суррогатный ключ имени, фамилии и координат; исходного ID клиента
+      нет.
+    data_tests:
+    - not_null
+- name: mart_daily_state_metrics
+  description: Дневные метрики покупок по штатам.
+  columns:
+  - name: transaction_date
+    description: Дата транзакции UTC.
+    data_tests:
+    - not_null
+  - name: us_state
+    description: Код штата США, включая DC.
+    data_tests:
+    - not_null
+    - relationships:
+        arguments:
+          to: ref('states')
+          field: state_code
+  - name: transaction_count
+    description: Количество транзакций в группе.
+    data_tests:
+    - not_null
+  - name: total_amount
+    description: Общая сумма транзакций.
+    data_tests:
+    - not_null
+  - name: average_amount
+    description: Средняя сумма транзакции.
+    data_tests:
+    - not_null
+  - name: p95_amount
+    description: "95-й перцентиль суммы методом nearest rank: элемент ceil(0.95 × n) отсортированного набора."
+    data_tests:
+    - not_null
+  - name: large_transaction_rate
+    description: Доля транзакций от 1000, в процентах.
+    data_tests:
+    - not_null
+  data_tests:
+  - dbt_utils.unique_combination_of_columns:
+      arguments:
+        combination_of_columns:
+        - transaction_date
+        - us_state
+- name: mart_fraud_by_category
+  description: Частота и сумма фрода по категориям.
+  columns:
+  - name: category
+    description: Очищенная категория транзакции.
+    data_tests:
+    - not_null
+    - unique
+  - name: transaction_count
+    description: Количество транзакций в группе.
+    data_tests:
+    - not_null
+  - name: fraud_count
+    description: Количество транзакций с target=1.
+    data_tests:
+    - not_null
+  - name: fraud_rate
+    description: Доля фродовых транзакций, в процентах 0–100.
+    data_tests:
+    - not_null
+    - dbt_expectations.expect_column_values_to_be_between:
+        arguments:
+          min_value: 0
+          max_value: 100
+  - name: total_amount
+    description: Общая сумма транзакций.
+    data_tests:
+    - not_null
+  - name: fraud_amount
+    description: Сумма фродовых транзакций.
+    data_tests:
+    - not_null
+- name: mart_fraud_by_state
+  description: Фрод, клиенты и мерчанты по штатам.
+  columns:
+  - name: us_state
+    description: Код штата США, включая DC.
+    data_tests:
+    - not_null
+    - unique
+    - relationships:
+        arguments:
+          to: ref('states')
+          field: state_code
+  - name: transaction_count
+    description: Количество транзакций в группе.
+    data_tests:
+    - not_null
+  - name: fraud_count
+    description: Количество транзакций с target=1.
+    data_tests:
+    - not_null
+  - name: fraud_rate
+    description: Доля фродовых транзакций, в процентах 0–100.
+    data_tests:
+    - not_null
+    - dbt_expectations.expect_column_values_to_be_between:
+        arguments:
+          min_value: 0
+          max_value: 100
+  - name: customer_count
+    description: Количество уникальных суррогатных ключей клиентов.
+    data_tests:
+    - not_null
+  - name: merchant_count
+    description: Количество уникальных мерчантов.
+    data_tests:
+    - not_null
+  - name: total_amount
+    description: Общая сумма транзакций.
+    data_tests:
+    - not_null
+  - name: fraud_amount
+    description: Сумма фродовых транзакций.
+    data_tests:
+    - not_null
+- name: mart_customer_risk_profile
+  description: История и сегмент риска клиента.
+  columns:
+  - name: customer_id
+    description: Суррогатный ключ имени, фамилии и координат; исходного ID клиента
+      нет.
+    data_tests:
+    - not_null
+    - unique
+  - name: transaction_count
+    description: Количество транзакций в группе.
+    data_tests:
+    - not_null
+  - name: fraud_count
+    description: Количество транзакций с target=1.
+    data_tests:
+    - not_null
+  - name: fraud_rate
+    description: Доля фродовых транзакций, в процентах 0–100.
+    data_tests:
+    - not_null
+    - dbt_expectations.expect_column_values_to_be_between:
+        arguments:
+          min_value: 0
+          max_value: 100
+  - name: average_amount
+    description: Средняя сумма транзакции.
+    data_tests:
+    - not_null
+  - name: total_amount
+    description: Общая сумма транзакций.
+    data_tests:
+    - not_null
+  - name: first_transaction
+    description: Время первой транзакции клиента.
+    data_tests:
+    - not_null
+  - name: last_transaction
+    description: Время последней транзакции клиента.
+    data_tests:
+    - not_null
+  - name: risk_level
+    description: 'HIGH: fraud_rate >=5%; MEDIUM: есть фрод при доле <5%; иначе LOW.'
+    data_tests:
+    - not_null
+    - accepted_values:
+        arguments:
+          values:
+          - HIGH
+          - MEDIUM
+          - LOW
+- name: mart_hourly_fraud_pattern
+  description: Частота фрода по дню недели и часу UTC.
+  columns:
+  - name: day_of_week
+    description: 'День недели ISO: понедельник 1, воскресенье 7.'
+    data_tests:
+    - not_null
+  - name: transaction_hour
+    description: 'Час транзакции UTC: 0–23.'
+    data_tests:
+    - not_null
+  - name: transaction_count
+    description: Количество транзакций в группе.
+    data_tests:
+    - not_null
+  - name: fraud_count
+    description: Количество транзакций с target=1.
+    data_tests:
+    - not_null
+  - name: fraud_rate
+    description: Доля фродовых транзакций, в процентах 0–100.
+    data_tests:
+    - not_null
+    - dbt_expectations.expect_column_values_to_be_between:
+        arguments:
+          min_value: 0
+          max_value: 100
+  - name: total_amount
+    description: Общая сумма транзакций.
+    data_tests:
+    - not_null
+  data_tests:
+  - dbt_utils.unique_combination_of_columns:
+      arguments:
+        combination_of_columns:
+        - day_of_week
+        - transaction_hour
+- name: mart_merchant_analytics
+  description: Оборот и признаки риска мерчантов.
+  columns:
+  - name: merchant
+    description: Очищенное название мерчанта.
+    data_tests:
+    - not_null
+    - unique
+  - name: transaction_count
+    description: Количество транзакций в группе.
+    data_tests:
+    - not_null
+  - name: fraud_count
+    description: Количество транзакций с target=1.
+    data_tests:
+    - not_null
+  - name: fraud_rate
+    description: Доля фродовых транзакций, в процентах 0–100.
+    data_tests:
+    - not_null
+    - dbt_expectations.expect_column_values_to_be_between:
+        arguments:
+          min_value: 0
+          max_value: 100
+  - name: total_amount
+    description: Общая сумма транзакций.
+    data_tests:
+    - not_null
+  - name: average_amount
+    description: Средняя сумма транзакции.
+    data_tests:
+    - not_null
+  - name: suspicious_flag
+    description: 1 при >=10 транзакциях и fraud_rate >=1%, иначе 0.
+    data_tests:
+    - not_null
+    - accepted_values:
+        arguments:
+          values:
+          - 0
+          - 1
+seeds:
+- name: states
+  description: Коды 50 штатов и округа Колумбия.
+  columns:
+  - name: state_code
+    description: Двухбуквенный код штата/округа.
+    data_tests:
+    - not_null
+    - unique

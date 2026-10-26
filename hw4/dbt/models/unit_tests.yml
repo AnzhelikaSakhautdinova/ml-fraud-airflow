@@ -1,0 +1,229 @@
+version: 2
+unit_tests:
+- name: staging_amount_boundaries_and_cleanup
+  model: stg_transactions
+  description: Границы сегментов, очистка строк и ISO день недели.
+  given:
+  - input: source('raw', 'transactions')
+    rows:
+    - transaction_id: '0'
+      transaction_time: '2020-01-06 02:00:00'
+      merch: ' shop '
+      cat_id: ' grocery '
+      amount: 99.99
+      name_1: Jane
+      name_2: Doe
+      gender: f
+      us_state: ' tx '
+      lat: 40
+      lon: -70
+      merchant_lat: 40.1
+      merchant_lon: -70.1
+      target: 0
+    - transaction_id: '1'
+      transaction_time: '2020-01-06 02:00:00'
+      merch: ' shop '
+      cat_id: ' grocery '
+      amount: 100
+      name_1: Jane
+      name_2: Doe
+      gender: f
+      us_state: ' tx '
+      lat: 40
+      lon: -70
+      merchant_lat: 40.1
+      merchant_lon: -70.1
+      target: 1
+    - transaction_id: '2'
+      transaction_time: '2020-01-06 02:00:00'
+      merch: ' shop '
+      cat_id: ' grocery '
+      amount: 999.99
+      name_1: Jane
+      name_2: Doe
+      gender: f
+      us_state: ' tx '
+      lat: 40
+      lon: -70
+      merchant_lat: 40.1
+      merchant_lon: -70.1
+      target: 0
+    - transaction_id: '3'
+      transaction_time: '2020-01-06 02:00:00'
+      merch: ' shop '
+      cat_id: ' grocery '
+      amount: 1000
+      name_1: Jane
+      name_2: Doe
+      gender: f
+      us_state: ' tx '
+      lat: 40
+      lon: -70
+      merchant_lat: 40.1
+      merchant_lon: -70.1
+      target: 1
+  expect:
+    rows:
+    - transaction_id: '0'
+      amount_segment: SMALL
+      day_of_week: 1
+      transaction_hour: 2
+      us_state: TX
+      fraud_flag: 0
+    - transaction_id: '1'
+      amount_segment: MEDIUM
+      day_of_week: 1
+      transaction_hour: 2
+      us_state: TX
+      fraud_flag: 1
+    - transaction_id: '2'
+      amount_segment: MEDIUM
+      day_of_week: 1
+      transaction_hour: 2
+      us_state: TX
+      fraud_flag: 0
+    - transaction_id: '3'
+      amount_segment: LARGE
+      day_of_week: 1
+      transaction_hour: 2
+      us_state: TX
+      fraud_flag: 1
+- name: customer_risk_segments
+  model: mart_customer_risk_profile
+  description: Риск клиента по доле подтверждённого фрода.
+  given:
+  - input: ref('stg_transactions')
+    rows:
+    - customer_id: high
+      amount: 10
+      fraud_flag: 1
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: high
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 1
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: medium
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: low
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+    - customer_id: low
+      amount: 10
+      fraud_flag: 0
+      transaction_time: '2020-01-01 00:00:00'
+  expect:
+    rows:
+    - customer_id: high
+      risk_level: HIGH
+    - customer_id: medium
+      risk_level: MEDIUM
+    - customer_id: low
+      risk_level: LOW
+- name: daily_p95_nearest_rank
+  model: mart_daily_state_metrics
+  description: Точный nearest-rank P95 и сумма на короткой выборке.
+  given:
+  - input: ref('stg_transactions')
+    rows:
+    - transaction_date: '2020-01-01'
+      us_state: TX
+      amount: 10
+      amount_segment: SMALL
+    - transaction_date: '2020-01-01'
+      us_state: TX
+      amount: 20
+      amount_segment: SMALL
+    - transaction_date: '2020-01-01'
+      us_state: TX
+      amount: 1000
+      amount_segment: LARGE
+  expect:
+    rows:
+    - transaction_date: '2020-01-01'
+      us_state: TX
+      transaction_count: 3
+      total_amount: 1030
+      p95_amount: 1000
